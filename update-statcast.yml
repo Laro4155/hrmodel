@@ -1,0 +1,31 @@
+name: Update Pitcher Statcast Data
+
+on:
+  schedule:
+    # Runs at 10am and 4pm ET daily (14:00 and 20:00 UTC)
+    # Two runs per day catches roster moves and gives a fresher pre-game read
+    - cron: '0 14 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch: {}  # allows manual "Run workflow" button in GitHub UI
+
+jobs:
+  update-pitchers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run pitcher Statcast fetch
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 fetch_statcast.py
+
+      - name: Report failure
+        if: failure()
+        run: echo "::warning::Pitcher Statcast fetch failed — pitchers table may be stale. Check logs above."
