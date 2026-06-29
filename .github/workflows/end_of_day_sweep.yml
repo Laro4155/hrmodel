@@ -1,0 +1,34 @@
+name: End of Day Sweep
+
+on:
+  schedule:
+    # 2:00 AM ET = 6:00 AM UTC (during EDT, UTC-4)
+    # Runs after all west coast games are guaranteed finished
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to sweep (YYYY-MM-DD). Leave blank for yesterday.'
+        required: false
+        default: ''
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run end of day sweep
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            python3 end_of_day_sweep.py --date ${{ github.event.inputs.date }}
+          else
+            python3 end_of_day_sweep.py
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
