@@ -1,0 +1,32 @@
+name: Auto-Visit Site (Headless Refresh)
+
+# Opens the live site in headless Chrome once per hour, all day, so
+# refreshSlate()/runModel()/runAutoLock() run automatically even if no one
+# ever opens the app in a real browser that day. Covers the full range of
+# MLB start times (Mon/Tue evening-only games through Wed-Sun noon-to-late
+# games) rather than assuming a fixed daily time.
+#
+# Schedule: on the hour, 15:00-23:00 UTC and 00:00-05:00 UTC
+# (≈ 11:00 AM - 1:00 AM ET) — covers earliest day games through extra innings.
+
+on:
+  schedule:
+    - cron: '0 15-23 * * *'
+    - cron: '0 0-5 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  visit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Visit site to trigger auto-generate
+        run: node visit_site.js
