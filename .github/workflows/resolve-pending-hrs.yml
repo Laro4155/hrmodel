@@ -1,0 +1,22 @@
+name: Resolve Pending HRs
+
+on:
+  schedule:
+    # 9:00 UTC (5am ET) — after end_of_day_sweep.py (6:00 UTC) and well after
+    # any game that day, including extra innings, should be Final.
+    - cron: '0 9 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  resolve-pending:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Resolve pending HR rows
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 resolve_pending_hrs.py
